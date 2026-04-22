@@ -7,6 +7,23 @@
   delegate_to: localhost
   run_once: true
 
+- name: Log into OpenShift with injected AAP token
+  ansible.builtin.command:
+    argv:
+      - oc
+      - login
+      - "{{ lookup('ansible.builtin.env', 'OCP_API_URL') }}"
+      - "--token={{ lookup('ansible.builtin.env', 'OCP_API_TOKEN') }}"
+      - "--insecure-skip-tls-verify={{ lookup('ansible.builtin.env', 'OCP_SKIP_TLS_VERIFY') | default('true', true) }}"
+  delegate_to: localhost
+  run_once: true
+  no_log: true
+  changed_when: false
+  when:
+    - demo_openshift_apply | bool
+    - lookup('ansible.builtin.env', 'OCP_API_URL') | length > 0
+    - lookup('ansible.builtin.env', 'OCP_API_TOKEN') | length > 0
+
 - name: Apply OpenShift demo manifest
   ansible.builtin.command:
     cmd: "oc apply -f {{ demo_workspace }}/openshift-demo.yml"

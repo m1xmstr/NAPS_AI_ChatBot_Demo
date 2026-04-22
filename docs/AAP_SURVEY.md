@@ -19,7 +19,7 @@ Recommended AAP Job Template:
 - Playbook: `playbooks/EDU_AI_DEMO.yml`
 - Inventory: private home lab or demo inventory
 - Credentials:
-  - OpenShift API credential or kubeconfig credential for OpenShift runtimes
+  - OpenShift API credential for OpenShift runtimes. The included role expects injected environment variables named `OCP_API_URL`, `OCP_API_TOKEN`, and optionally `OCP_SKIP_TLS_VERIFY`.
   - Machine credential for Podman/RHEL runtimes
   - Optional SCM credential if the private repo is not public to the AAP controller
   - Optional model endpoint credential for RHEL AI/OpenShift AI
@@ -36,4 +36,3 @@ The smoke test asks:
 - How many students find job placement after graduation?
 
 The app should not be expected to answer every question from a shallow crawl. A high-quality demo answer can also be: "I could not verify this in the crawled pages, but here are the most relevant official links."
-

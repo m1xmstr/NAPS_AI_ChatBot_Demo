@@ -48,7 +48,7 @@ ansible-playbook playbooks/EDU_AI_DEMO.yml \
   -e demo_runtime="openshift"
 ```
 
-The OpenShift path uses the `oc` CLI from the execution environment by default.
+The OpenShift path uses the `oc` CLI from the execution environment by default. In AAP, attach an OpenShift credential that injects `OCP_API_URL`, `OCP_API_TOKEN`, and optionally `OCP_SKIP_TLS_VERIFY`; the playbook logs in with those values before applying or removing OpenShift resources.
 
 Clean up an OpenShift demo namespace:
 
