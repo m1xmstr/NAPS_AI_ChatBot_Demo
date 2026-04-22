@@ -16,6 +16,28 @@
         else [demo_runtime]
       }}
 
+- name: Parse seed URLs from survey input
+  ansible.builtin.set_fact:
+    edu_ai_seed_urls_raw: >-
+      {{
+        (demo_seed_urls | from_yaml)
+        if demo_seed_urls is string
+        else demo_seed_urls
+      }}
+
+- name: Normalize seed URL list
+  ansible.builtin.set_fact:
+    edu_ai_seed_urls: >-
+      {{
+        []
+        if edu_ai_seed_urls_raw is none
+        else (
+          [edu_ai_seed_urls_raw]
+          if edu_ai_seed_urls_raw is string and (edu_ai_seed_urls_raw | trim | length > 0)
+          else edu_ai_seed_urls_raw
+        )
+      }}
+
 - name: Run cleanup path
   ansible.builtin.include_tasks: cleanup.yml
   when: edu_ai_action == 'cleanup'
@@ -55,7 +77,7 @@
         ]
         + ((demo_logo_url | length > 0) | ternary(['--logo-url', demo_logo_url], []))
         + ((demo_logo_file | length > 0) | ternary(['--logo-file', demo_logo_file], []))
-        + ((demo_seed_urls | length > 0) | ternary(['--seed-url'] + demo_seed_urls, []))
+        + ((edu_ai_seed_urls | length > 0) | ternary(['--seed-url'] + edu_ai_seed_urls, []))
       }}
   changed_when: true
   delegate_to: localhost
@@ -79,4 +101,3 @@
       - "Report: {{ demo_workspace }}/report.md"
       - "Runtime selection: {{ edu_ai_runtime_list | join(', ') }}"
   run_once: true
-
