@@ -1,0 +1,23 @@
+---
+- name: Run offline smoke test
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - "{{ playbook_dir }}/../tools/smoke_test.py"
+      - "--app-dir"
+      - "{{ demo_workspace }}/app"
+      - "--questions-file"
+      - "{{ demo_workspace }}/questions.json"
+      - "--output-json"
+      - "{{ demo_workspace }}/smoke-results.json"
+      - "--output-md"
+      - "{{ demo_workspace }}/smoke-results.md"
+  changed_when: true
+  delegate_to: localhost
+  run_once: true
+
+- name: Show smoke-test report path
+  ansible.builtin.debug:
+    msg: "Smoke-test report: {{ demo_workspace }}/smoke-results.md"
+  run_once: true
+

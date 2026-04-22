@@ -1,0 +1,82 @@
+---
+- name: Validate required customer inputs
+  ansible.builtin.assert:
+    that:
+      - customer_name | length > 0
+      - customer_website | length > 0
+      - demo_runtime in ['artifact', 'podman', 'openshift', 'openshift_ai', 'rhel_ai', 'all']
+    fail_msg: "Set customer_name, customer_website, and demo_runtime."
+
+- name: Normalize runtime list
+  ansible.builtin.set_fact:
+    edu_ai_runtime_list: >-
+      {{
+        ['artifact', 'podman', 'openshift_ai', 'rhel_ai']
+        if demo_runtime == 'all'
+        else [demo_runtime]
+      }}
+
+- name: Run cleanup path
+  ansible.builtin.include_tasks: cleanup.yml
+  when: edu_ai_action == 'cleanup'
+
+- name: Stop after cleanup
+  ansible.builtin.meta: end_play
+  when: edu_ai_action == 'cleanup'
+
+- name: Create local demo workspace
+  ansible.builtin.file:
+    path: "{{ demo_workspace }}"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+  run_once: true
+
+- name: Write question set for builder and smoke tests
+  ansible.builtin.copy:
+    dest: "{{ demo_workspace }}/questions.json"
+    mode: "0644"
+    content: "{{ demo_question_set | to_nice_json }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Build customer-specific chatbot artifact
+  ansible.builtin.command:
+    argv: >-
+      {{
+        [
+          ansible_playbook_python,
+          playbook_dir ~ '/../tools/edu_ai_demo_builder.py',
+          '--customer-name', customer_name,
+          '--customer-website', customer_website,
+          '--output-dir', demo_workspace,
+          '--max-pages', demo_max_pages | string,
+          '--questions-file', demo_workspace ~ '/questions.json'
+        ]
+        + ((demo_logo_url | length > 0) | ternary(['--logo-url', demo_logo_url], []))
+        + ((demo_logo_file | length > 0) | ternary(['--logo-file', demo_logo_file], []))
+        + ((demo_seed_urls | length > 0) | ternary(['--seed-url'] + demo_seed_urls, []))
+      }}
+  changed_when: true
+  delegate_to: localhost
+  run_once: true
+
+- name: Deploy OpenShift-based demo
+  ansible.builtin.include_tasks: deploy_openshift.yml
+  when: "'openshift' in edu_ai_runtime_list or 'openshift_ai' in edu_ai_runtime_list"
+
+- name: Deploy Podman-based demo
+  ansible.builtin.include_tasks: deploy_podman.yml
+  when: "'podman' in edu_ai_runtime_list or 'rhel_ai' in edu_ai_runtime_list"
+
+- name: Run offline smoke test for generated artifact
+  ansible.builtin.include_tasks: smoke_test.yml
+
+- name: Show artifact location
+  ansible.builtin.debug:
+    msg:
+      - "Demo artifact: {{ demo_workspace }}"
+      - "Report: {{ demo_workspace }}/report.md"
+      - "Runtime selection: {{ edu_ai_runtime_list | join(', ') }}"
+  run_once: true
+

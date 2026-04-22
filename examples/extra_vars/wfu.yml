@@ -1,0 +1,10 @@
+---
+customer_name: "Wake Forest University"
+customer_website: "https://www.wfu.edu/"
+demo_runtime: artifact
+demo_max_pages: 18
+demo_seed_urls:
+  - "https://admissions.wfu.edu/"
+  - "https://financialaid.wfu.edu/"
+  - "https://registrar.wfu.edu/"
+

@@ -1,0 +1,11 @@
+demo-output/
+.ansible/
+.venv/
+__pycache__/
+*.pyc
+*.retry
+*.log
+.DS_Store
+private_assets/
+secrets/
+

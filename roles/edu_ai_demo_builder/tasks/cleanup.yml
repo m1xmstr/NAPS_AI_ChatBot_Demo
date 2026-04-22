@@ -1,0 +1,31 @@
+---
+- name: Remove OpenShift demo namespace
+  ansible.builtin.command:
+    cmd: "oc delete namespace {{ demo_openshift_namespace }} --ignore-not-found=true --wait=true"
+  delegate_to: localhost
+  run_once: true
+  register: edu_ai_oc_delete
+  changed_when: "'deleted' in edu_ai_oc_delete.stdout"
+  when: demo_runtime in ['openshift', 'openshift_ai', 'all']
+
+- name: Remove Podman demo container
+  ansible.builtin.command:
+    cmd: "podman rm -f {{ demo_podman_container }}"
+  become: true
+  register: edu_ai_cleanup_podman
+  failed_when: false
+  changed_when: edu_ai_cleanup_podman.rc == 0
+  when: demo_runtime in ['podman', 'rhel_ai', 'all']
+
+- name: Remove Podman demo image
+  ansible.builtin.command:
+    cmd: "podman rmi -f {{ demo_podman_image }}"
+  become: true
+  register: edu_ai_cleanup_image
+  failed_when: false
+  changed_when: edu_ai_cleanup_image.rc == 0
+  when: demo_runtime in ['podman', 'rhel_ai', 'all']
+
+- name: Cleanup complete
+  ansible.builtin.debug:
+    msg: "Cleanup requested for {{ customer_name }} using runtime {{ demo_runtime }}."

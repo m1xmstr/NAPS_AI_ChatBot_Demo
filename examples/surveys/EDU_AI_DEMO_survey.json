@@ -1,0 +1,64 @@
+{
+  "name": "EDU_AI_DEMO",
+  "description": "Build a temporary school-branded AI chatbot demo from public website content.",
+  "spec": [
+    {
+      "question_name": "Customer Name",
+      "question_description": "Official school or organization name to show in the demo.",
+      "required": true,
+      "type": "text",
+      "variable": "customer_name",
+      "min": 1,
+      "max": 128,
+      "default": ""
+    },
+    {
+      "question_name": "Customer Website",
+      "question_description": "Public website to crawl, for example https://www.unc.edu/.",
+      "required": true,
+      "type": "text",
+      "variable": "customer_website",
+      "min": 1,
+      "max": 256,
+      "default": ""
+    },
+    {
+      "question_name": "Logo URL",
+      "question_description": "Optional direct logo image URL. Leave blank to auto-discover.",
+      "required": false,
+      "type": "text",
+      "variable": "demo_logo_url",
+      "min": 0,
+      "max": 512,
+      "default": ""
+    },
+    {
+      "question_name": "Runtime",
+      "question_description": "Where should the temporary demo run?",
+      "required": true,
+      "type": "multiplechoice",
+      "variable": "demo_runtime",
+      "choices": "artifact\npodman\nrhel_ai\nopenshift\nopenshift_ai\nall",
+      "default": "openshift_ai"
+    },
+    {
+      "question_name": "Max Pages",
+      "question_description": "Bounded crawl limit for public pages.",
+      "required": true,
+      "type": "integer",
+      "variable": "demo_max_pages",
+      "min": 4,
+      "max": 80,
+      "default": 24
+    },
+    {
+      "question_name": "Seed URLs",
+      "question_description": "Optional YAML list of specific official URLs to prioritize.",
+      "required": false,
+      "type": "textarea",
+      "variable": "demo_seed_urls",
+      "default": "[]"
+    }
+  ]
+}
+

@@ -1,0 +1,49 @@
+---
+- name: Render OpenShift manifest
+  ansible.builtin.template:
+    src: openshift/demo-app.yml.j2
+    dest: "{{ demo_workspace }}/openshift-demo.yml"
+    mode: "0644"
+  delegate_to: localhost
+  run_once: true
+
+- name: Apply OpenShift demo manifest
+  ansible.builtin.command:
+    cmd: "oc apply -f {{ demo_workspace }}/openshift-demo.yml"
+  delegate_to: localhost
+  run_once: true
+  register: edu_ai_oc_apply
+  changed_when: "'created' in edu_ai_oc_apply.stdout or 'configured' in edu_ai_oc_apply.stdout"
+  when: demo_openshift_apply | bool
+
+- name: Wait for OpenShift deployment rollout
+  ansible.builtin.command:
+    cmd: "oc -n {{ demo_openshift_namespace }} rollout status deployment/{{ demo_app_name }} --timeout=180s"
+  delegate_to: localhost
+  run_once: true
+  when: demo_openshift_apply | bool
+  changed_when: false
+
+- name: Read generated OpenShift route
+  ansible.builtin.command:
+    cmd: "oc -n {{ demo_openshift_namespace }} get route {{ demo_app_name }} -o jsonpath=https://{.spec.host}"
+  register: edu_ai_route_url
+  delegate_to: localhost
+  run_once: true
+  changed_when: false
+  when: demo_openshift_apply | bool
+
+- name: Record OpenShift route URL
+  ansible.builtin.copy:
+    dest: "{{ demo_workspace }}/openshift-url.txt"
+    mode: "0644"
+    content: "{{ edu_ai_route_url.stdout }}\n"
+  delegate_to: localhost
+  run_once: true
+  when: demo_openshift_apply | bool
+
+- name: Show OpenShift URL
+  ansible.builtin.debug:
+    msg: "OpenShift demo URL: {{ edu_ai_route_url.stdout }}"
+  run_once: true
+  when: demo_openshift_apply | bool

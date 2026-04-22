@@ -1,0 +1,9 @@
+---
+customer_name: "RENCI"
+customer_website: "https://renci.org/"
+demo_runtime: artifact
+demo_max_pages: 18
+demo_seed_urls:
+  - "https://renci.org/about/"
+  - "https://renci.org/education/"
+

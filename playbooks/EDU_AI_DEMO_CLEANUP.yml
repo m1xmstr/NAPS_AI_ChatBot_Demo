@@ -1,0 +1,9 @@
+---
+- name: EDU_AI_DEMO cleanup
+  hosts: "{{ edu_ai_target_hosts | default('localhost') }}"
+  gather_facts: false
+  vars:
+    edu_ai_action: cleanup
+  roles:
+    - role: edu_ai_demo_builder
+

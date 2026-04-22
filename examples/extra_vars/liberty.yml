@@ -1,0 +1,10 @@
+---
+customer_name: "Liberty University"
+customer_website: "https://www.liberty.edu/"
+demo_runtime: artifact
+demo_max_pages: 18
+demo_seed_urls:
+  - "https://www.liberty.edu/residential/admissions/"
+  - "https://www.liberty.edu/student-financial-services/"
+  - "https://www.liberty.edu/registrar/"
+

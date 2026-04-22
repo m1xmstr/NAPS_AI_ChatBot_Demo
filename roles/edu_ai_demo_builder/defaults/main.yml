@@ -1,0 +1,39 @@
+---
+customer_name: ""
+customer_website: ""
+demo_runtime: artifact
+demo_max_pages: 24
+demo_logo_url: ""
+demo_logo_file: ""
+demo_seed_urls: []
+demo_question_set:
+  - "When is open enrollment?"
+  - "When can I register for classes?"
+  - "How much is tuition going up?"
+  - "How do I apply for financial assistance?"
+  - "Where are the closest bookstores to campus?"
+  - "How many students find job placement after graduation?"
+
+demo_workspace_root: "{{ lookup('env', 'EDU_AI_DEMO_OUTPUT') | default(playbook_dir ~ '/../demo-output', true) }}"
+demo_customer_slug: "{{ customer_name | lower | regex_replace('[^a-z0-9]+', '-') | regex_replace('(^-+|-+$)', '') }}"
+demo_customer_short_slug: "{{ (demo_customer_slug[:28] | regex_replace('(^-+|-+$)', '')) ~ '-' ~ ((customer_name | hash('sha1'))[:6]) }}"
+demo_workspace: "{{ demo_workspace_root }}/{{ demo_customer_slug }}"
+
+demo_app_name: "edu-ai-demo"
+demo_http_port: 8080
+demo_podman_image: "localhost/edu-ai-demo-{{ demo_customer_slug }}:latest"
+demo_podman_container: "edu-ai-demo-{{ demo_customer_slug }}"
+demo_podman_remote_dir: "/opt/edu-ai-demo/{{ demo_customer_slug }}"
+demo_manage_podman_packages: false
+
+demo_openshift_namespace_prefix: "edu-ai-demo"
+demo_openshift_namespace: "{{ demo_openshift_namespace_prefix }}-{{ demo_customer_short_slug }}"
+demo_openshift_image: "registry.access.redhat.com/ubi9/python-311:latest"
+demo_openshift_apply: true
+demo_openshift_wait: true
+demo_openshift_apply_method: oc
+
+demo_llm_endpoint_url: ""
+demo_llm_api_key_env: "DEMO_LLM_API_KEY"
+demo_llm_model: "demo-model"
+demo_provider_label: "{{ demo_runtime }}"

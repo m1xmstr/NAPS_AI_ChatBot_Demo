@@ -1,0 +1,10 @@
+---
+customer_name: "University of North Carolina at Chapel Hill"
+customer_website: "https://www.unc.edu/"
+demo_runtime: artifact
+demo_max_pages: 18
+demo_seed_urls:
+  - "https://www.unc.edu/admissions/"
+  - "https://registrar.unc.edu/"
+  - "https://studentaid.unc.edu/"
+

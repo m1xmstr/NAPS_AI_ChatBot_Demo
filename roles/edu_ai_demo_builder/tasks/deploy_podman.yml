@@ -1,0 +1,52 @@
+---
+- name: Install Podman when requested
+  ansible.builtin.package:
+    name: podman
+    state: present
+  become: true
+  when: demo_manage_podman_packages | bool
+
+- name: Create remote Podman demo directory
+  ansible.builtin.file:
+    path: "{{ demo_podman_remote_dir }}"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Copy generated app to Podman target
+  ansible.builtin.copy:
+    src: "{{ demo_workspace }}/app/"
+    dest: "{{ demo_podman_remote_dir }}/"
+    mode: preserve
+  become: true
+
+- name: Build Podman image
+  ansible.builtin.command:
+    cmd: "podman build -t {{ demo_podman_image }} {{ demo_podman_remote_dir }}"
+  become: true
+  changed_when: true
+
+- name: Remove existing demo container
+  ansible.builtin.command:
+    cmd: "podman rm -f {{ demo_podman_container }}"
+  become: true
+  register: edu_ai_podman_rm
+  failed_when: false
+  changed_when: edu_ai_podman_rm.rc == 0
+
+- name: Run Podman demo container
+  ansible.builtin.command:
+    cmd: >-
+      podman run -d --name {{ demo_podman_container }}
+      -p {{ demo_http_port }}:8080
+      -e DEMO_AI_PROVIDER={{ demo_runtime }}
+      {{ (demo_llm_endpoint_url | length > 0) | ternary('-e DEMO_LLM_ENDPOINT=' ~ demo_llm_endpoint_url, '') }}
+      -e DEMO_LLM_MODEL={{ demo_llm_model }}
+      {{ demo_podman_image }}
+  become: true
+  changed_when: true
+
+- name: Show Podman URL
+  ansible.builtin.debug:
+    msg: "Podman demo URL: http://{{ ansible_host | default(inventory_hostname) }}:{{ demo_http_port }}"
+

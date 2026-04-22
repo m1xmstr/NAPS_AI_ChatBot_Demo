@@ -1,0 +1,131 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ demo_openshift_namespace }}
+  labels:
+    app.kubernetes.io/name: {{ demo_app_name }}
+    edu-ai-demo/customer: {{ demo_customer_slug }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ demo_app_name }}-app
+  namespace: {{ demo_openshift_namespace }}
+  labels:
+    app.kubernetes.io/name: {{ demo_app_name }}
+data:
+  app.py: |
+{{ lookup('file', demo_workspace ~ '/app/app.py') | indent(4, true) }}
+  profile.json: |
+{{ lookup('file', demo_workspace ~ '/app/profile.json') | indent(4, true) }}
+  knowledge.json: |
+{{ lookup('file', demo_workspace ~ '/app/knowledge.json') | indent(4, true) }}
+  index.html: |
+{{ lookup('file', demo_workspace ~ '/app/static/index.html') | indent(4, true) }}
+  styles.css: |
+{{ lookup('file', demo_workspace ~ '/app/static/styles.css') | indent(4, true) }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ demo_app_name }}
+  namespace: {{ demo_openshift_namespace }}
+  labels:
+    app.kubernetes.io/name: {{ demo_app_name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ demo_app_name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ demo_app_name }}
+        edu-ai-demo/customer: {{ demo_customer_slug }}
+    spec:
+      containers:
+        - name: chatbot
+          image: {{ demo_openshift_image }}
+          imagePullPolicy: IfNotPresent
+          command: ["python"]
+          args: ["/opt/app/app.py"]
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DEMO_AI_PROVIDER
+              value: "{{ demo_runtime }}"
+            - name: DEMO_LLM_ENDPOINT
+              value: "{{ demo_llm_endpoint_url }}"
+            - name: DEMO_LLM_MODEL
+              value: "{{ demo_llm_model }}"
+            - name: DEMO_LLM_API_KEY_ENV
+              value: "{{ demo_llm_api_key_env }}"
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          volumeMounts:
+            - name: app
+              mountPath: /opt/app/app.py
+              subPath: app.py
+            - name: app
+              mountPath: /opt/app/profile.json
+              subPath: profile.json
+            - name: app
+              mountPath: /opt/app/knowledge.json
+              subPath: knowledge.json
+            - name: app
+              mountPath: /opt/app/static/index.html
+              subPath: index.html
+            - name: app
+              mountPath: /opt/app/static/styles.css
+              subPath: styles.css
+      volumes:
+        - name: app
+          configMap:
+            name: {{ demo_app_name }}-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ demo_app_name }}
+  namespace: {{ demo_openshift_namespace }}
+  labels:
+    app.kubernetes.io/name: {{ demo_app_name }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ demo_app_name }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ demo_app_name }}
+  namespace: {{ demo_openshift_namespace }}
+  labels:
+    app.kubernetes.io/name: {{ demo_app_name }}
+spec:
+  to:
+    kind: Service
+    name: {{ demo_app_name }}
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+
